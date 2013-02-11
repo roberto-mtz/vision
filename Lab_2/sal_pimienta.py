@@ -1,9 +1,9 @@
 from Tkinter import *
 from PIL import Image, ImageTk
 from math import floor
-import time
 import numpy
 import random
+
 def ventana():
     root = Tk()
     root.title('Lab 2')
@@ -12,7 +12,7 @@ def ventana():
     poner_imagen(obtener_original(path_imagen_original))
     b1 = Button(text='Original', command = boton_original).pack(in_=frame, side=LEFT)
     b2 = Button(text='S&P', command = boton_sp).pack(in_=frame, side=LEFT)
-    b3 = Button(text='Quitar S&P', command = boton_bordes).pack(in_=frame, side=LEFT)
+    b3 = Button(text='Quitar S&P', command = boton_quitar_sp).pack(in_=frame, side=LEFT)
     b4 = Button(text='Bordes', command = boton_bordes).pack(in_=frame, side=LEFT)
     root.mainloop()
 
@@ -41,34 +41,11 @@ def cambiar_agrises(path_original):
     
     return imagen_nueva
 
-def convolucion(f, h):
-    pixeles = f.load()
-    x, y = f.size
-    F = Image.new("RGB", (x, y))
-    i = len(h[0])
-    j = len(h[0])
-    for a in range(x):
-        for b in range(y):
-            suma = 0
-            for c in range(i):
-                c1 = c - i/2
-                for d in range(j):
-                    d1 = d - j/2
-                    try:
-                        suma = suma + (pixeles[a+c1, b+d1][0])*(h[c][d])
-                    except:
-                        pass
-            suma = int(floor(suma))
-            tupla_promedio = (suma, suma, suma)
-            F.putpixel((a,b),tupla_promedio)
-    
-    return F
-
 def cambiar_promedio(imagen):
     pixeles = imagen.load()
     x, y = imagen.size
     imagen_nueva_prom = Image.new("RGB", (x, y))
-    
+
     colores = []
     for a in range(x):
         for b in range(y):
@@ -76,7 +53,7 @@ def cambiar_promedio(imagen):
             veces = 5
             suma = 0
             promedio = 0
-            
+
             try:
                 pixel_norte = pixeles[a-1,b]
             except IndexError:
@@ -97,19 +74,19 @@ def cambiar_promedio(imagen):
             except IndexError:
                 pixel_oeste = (0, 0, 0)
                 veces = veces - 1
-            
+
             Rojos_suma = pixel_norte[0] + pixel_sur[0] + pixel_este[0] + pixel_oeste[0] + pixel_color[0]
             Verdes_suma = pixel_norte[1]+ pixel_sur[1] + pixel_este[1] + pixel_oeste[1] + pixel_color[1]
             Azul_suma = pixel_norte[2]+ pixel_sur[2] + pixel_este[2] + pixel_oeste[2] + pixel_color[2]
-            
+
             Rojo_prom = Rojos_suma/veces
             Verdes_prom = Verdes_suma/veces
             Azul_prom = Azul_suma/veces
-            
+
             tupla_promedio = (Rojo_prom, Verdes_prom, Azul_prom)
             colores.append(tupla_promedio)
             imagen_nueva_prom.putpixel((a, b), tupla_promedio)
-    
+
     return imagen_nueva_prom
 
 def diferencia(imagen):
@@ -207,7 +184,7 @@ def cambiar_umbral(imagen, umbral_valor):
             pixel_color = pixeles[a, b]
             valor_canal = float(pixel_color[0])
             color_nor = valor_canal/255.0
-            if(color_nor>=umbral_valor):
+            if(color_nor > umbral_valor):
                 poner_pixel = 255
             else:
                 poner_pixel = 0
@@ -236,54 +213,101 @@ def cambiar_SP(imagen, inten, pola):
 
     return imagen_nueva
 
+def quitar_SP(imagen):
+    pixeles = imagen.load()
+    x, y = imagen.size
+    imagen_nueva_prom = Image.new("RGB", (x, y))
+    
+    for a in range(x):
+        for b in range(y):
+            pixel_color = pixeles[a, b]
+            veces = 4
+            suma = 0
+            promedio = 0
+            
+            try:
+                pixel_norte = pixeles[a-1,b]
+            except IndexError:
+                pixel_norte = (0, 0, 0)
+                veces = veces - 1
+            try:
+                pixel_sur = pixeles[a+1, b]
+            except IndexError:
+                pixel_sur = (0, 0, 0)
+                veces = veces - 1
+            try:
+                pixel_este = pixeles[a, b+1]
+            except IndexError:
+                pixel_este = (0, 0, 0)
+                veces = veces - 1
+            try:
+                pixel_oeste = pixeles[a, b-1]
+            except IndexError:
+                pixel_oeste = (0, 0, 0)
+                veces = veces - 1
+        
+            
+            arreglo = [pixel_norte[0], pixel_sur[0], pixel_este[0], pixel_oeste[0]]
+            arreglo.sort()
+            resultado = int(floor(mediana(arreglo)))
+            tupla_promedio = (resultado, resultado, resultado)
+            imagen_nueva_prom.putpixel((a, b), tupla_promedio)
+    
+    return imagen_nueva_prom
+
+def mediana(arreglo):
+    if len(arreglo) % 2 == 1:
+        return arreglo[(len(arreglo)+1)/2-1]
+    else:
+        izq = arreglo[len(arreglo)/2-1]
+        der = arreglo[len(arreglo)/2]
+        return (float(izq + izq)) / 2.0
+
 def obtener_original(path_imagen_original):
     imagen = Image.open(path_imagen_original)
     return imagen
 
 def boton_bordes():
-    inicio = time.time()
     label.destroy()
+    #Pongo a grises
     imagen_grises = cambiar_agrises(path_imagen_original)
     imagen_grises.save("paso_1.jpg")
-    imagen_prom1 = cambiar_promedio(imagen_grises.convert("RGB"))
-    imagen_prom1.save("paso_2.jpg")
-    imagen_prom2 = cambiar_promedio(imagen_prom1.convert("RGB"))
-    imagen_prom2.save("paso_3.jpg")
-    imagen_prom = diferencia(imagen_prom2.convert("RGB"))
-    imagen_prom.save("paso_4.jpg")
-    h = numpy.array([[-3,-3,5],[-3,0,5],[-3,-3,5]])
-    imagen_con = convolucion(imagen_prom, h)
-    imagen_con.save("paso_5.jpg")
-    h_hori = numpy.array([[-1, -2, -1],[0, 0, 0], [1, 2, 1]])
-    imagen_con2 = convolucion(imagen_con, h_hori)
-    imagen_con3 = convolucion(imagen_con2, h_hori)
-    imagen_con3.save("paso_6.jpg")
-    h_verti = numpy.array([[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]])
-    imagen_con4 = convolucion(imagen_con3, h_verti)
-    imagen_con4.save("paso_7.jpg")
-    imagen_nor = normalizacion(imagen_con4)
-    imagen_nor.save("paso_8.jpg")
-    umbral_valor = 0.5
+    
+    #Agrego diferencia
+    imagen_prom = diferencia(imagen_grises.convert("RGB"))
+    imagen_prom.save("paso_2.jpg")
+    
+    #Agrego normalizacion
+    imagen_nor = normalizacion(imagen_prom)
+    imagen_nor.save("paso_3.jpg")
+    
+    #Agrego umbral para binarizar
+    umbral_valor = 0.1
     imagen_bin = cambiar_umbral(imagen_nor.convert("RGB"), umbral_valor)
-    imagen_bin.save("paso_9.jpg")
-    imagen_final1 = cambiar_promedio(imagen_bin.convert("RGB"))
-    imagen_final1.save("paso_10.jpg")
-    poner_imagen(imagen_final1)
-    fin = time.time()
-    tiempo = fin - inicio
-    print "Tiempo que trascurrio -> " + str(tiempo)
-    return tiempo
+    imagen_bin.save("paso_4.jpg")
+    
+    #Pongo promedio
+    imagen_prom = cambiar_promedio(imagen_bin.convert("RGB"))
+    imagen_prom.save("paso_5.jpg")
+    poner_imagen(imagen_prom)
 
 def boton_original():
     label.destroy()
+    global imagen_original
     imagen_original = obtener_original(path_imagen_original)
     poner_imagen(imagen_original)
 
 def boton_sp():
     label.destroy()
     global imagen_original
-    imagen_grises = cambiar_SP(imagen_original.convert("RGB"), 0.1, 0.5)
-    poner_imagen(imagen_grises)
+    imagen_original = cambiar_SP(imagen_original.convert("RGB"), 0.1, 0.9)
+    poner_imagen(imagen_original)
+
+def boton_quitar_sp():
+    label.destroy()
+    global imagen_original
+    imagen_original = quitar_SP(imagen_original.convert("RGB"))
+    poner_imagen(imagen_original)
 
 path_imagen_original = "cerro.jpg"
 imagen_original = obtener_original(path_imagen_original)
