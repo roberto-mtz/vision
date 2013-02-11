@@ -6,13 +6,14 @@ import numpy
 
 def ventana():
     root = Tk()
-    root.title('Bordes')
+    root.title('Filtros')
     frame = Frame()
     frame.pack(padx=5,pady=5)
     poner_imagen(obtener_original(path_imagen_original))
     b1 = Button(text='Original', command = boton_original).pack(in_=frame, side=LEFT)
-    b2 = Button(text='Detectar bordes', command = boton_bordes).pack(in_=frame, side=LEFT)
-    b1 = Button(text='Prueba tiempo', command = boton_prueba).pack(in_=frame, side=LEFT)
+    b2 = Button(text='S&P', command = boton_bordes).pack(in_=frame, side=LEFT)
+    b3 = Button(text='Quitar S&P', command = boton_bordes).pack(in_=frame, side=LEFT)
+    b4 = Button(text='Bordes', command = boton_bordes).pack(in_=frame, side=LEFT)
     root.mainloop()
 
 def poner_imagen(image):
@@ -222,49 +223,32 @@ def obtener_original(path_imagen_original):
 def boton_bordes():
     inicio = time.time()
     label.destroy()
-    
-    #A grises
     imagen_grises = cambiar_agrises(path_imagen_original)
     imagen_grises.save("paso_1.jpg")
-    
-    #Aplico mascara Sobel a 0 grados
-    h = numpy.array([[-1,0,1],[-2,0,2],[-1,0,1]])
-    imagen_con = convolucion(imagen_grises, h)
-    imagen_con.save("paso_2.jpg")
-    
-    #Aplico mascara Sobel a 45 grados
-    h = numpy.array([[1,2,1],[0,0,0],[-1,-2,-1]])
-    imagen_con2 = convolucion(imagen_con, h)
-    imagen_con2.save("paso_3.jpg")
-    
-    #Aplico gradiente horizontal
+    imagen_prom1 = cambiar_promedio(imagen_grises.convert("RGB"))
+    imagen_prom1.save("paso_2.jpg")
+    imagen_prom2 = cambiar_promedio(imagen_prom1.convert("RGB"))
+    imagen_prom2.save("paso_3.jpg")
+    imagen_prom = diferencia(imagen_prom2.convert("RGB"))
+    imagen_prom.save("paso_4.jpg")
+    h = numpy.array([[-3,-3,5],[-3,0,5],[-3,-3,5]])
+    imagen_con = convolucion(imagen_prom, h)
+    imagen_con.save("paso_5.jpg")
     h_hori = numpy.array([[-1, -2, -1],[0, 0, 0], [1, 2, 1]])
+    imagen_con2 = convolucion(imagen_con, h_hori)
     imagen_con3 = convolucion(imagen_con2, h_hori)
-    imagen_con3.save("paso_4.jpg")
-    
-    #Aplico gradiente vertical
+    imagen_con3.save("paso_6.jpg")
     h_verti = numpy.array([[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]])
     imagen_con4 = convolucion(imagen_con3, h_verti)
-    imagen_con4.save("paso_5.jpg")
-    
-    #Normalizo la imagen
-    imagen_nor = normalizacion(imagen_con3)
-    imagen_nor.save("paso_6.jpg")
-    
-    #Binarizo (umbral 0.5)
+    imagen_con4.save("paso_7.jpg")
+    imagen_nor = normalizacion(imagen_con4)
+    imagen_nor.save("paso_8.jpg")
     umbral_valor = 0.5
     imagen_bin = cambiar_umbral(imagen_nor.convert("RGB"), umbral_valor)
-    imagen_bin.save("paso_7.jpg")
-    
-    #Hace promedio
+    imagen_bin.save("paso_9.jpg")
     imagen_final1 = cambiar_promedio(imagen_bin.convert("RGB"))
-    imagen_final2 = cambiar_promedio(imagen_final1.convert("RGB"))
-    imagen_final2.save("paso_8.jpg")
-    
-    #Pone en ventana
-    poner_imagen(imagen_final2)
-    
-    #Tiempo
+    imagen_final1.save("paso_10.jpg")
+    poner_imagen(imagen_final1)
     fin = time.time()
     tiempo = fin - inicio
     print "Tiempo que trascurrio -> " + str(tiempo)
@@ -275,12 +259,5 @@ def boton_original():
     imagen_original = obtener_original(path_imagen_original)
     poner_imagen(imagen_original)
 
-def boton_prueba():
-    tiempo = 0.0
-    for i in range(30):
-        tiempo = tiempo + boton_bordes()
-    promedio = tiempo / 30.0
-    print "Tiempo promedio de " + path_imagen_original + " es = " + str(promedio)
-
-path_imagen_original = "fruta.jpg"
+path_imagen_original = "cerro.jpg"
 ventana()
