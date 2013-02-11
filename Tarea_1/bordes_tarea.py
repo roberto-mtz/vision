@@ -111,58 +111,6 @@ def cambiar_promedio(imagen):
     
     return imagen_nueva_prom
 
-def diferencia(imagen):
-    pixeles = imagen.load()
-    x, y = imagen.size
-    imagen_nueva_prom = Image.new("RGB", (x, y))
-    
-    colores = []
-    for a in range(x):
-        for b in range(y):
-            pixel_color = pixeles[a, b]
-            veces = 5
-            suma = 0
-            promedio = 0
-            
-            try:
-                pixel_norte = pixeles[a-1,b]
-            except IndexError:
-                pixel_norte = (0, 0, 0)
-                veces = veces - 1
-            try:
-                pixel_sur = pixeles[a+1, b]
-            except IndexError:
-                pixel_sur = (0, 0, 0)
-                veces =veces - 1
-            try:
-                pixel_este = pixeles[a, b+1]
-            except IndexError:
-                pixel_este = (0, 0, 0)
-                veces =veces - 1
-            try:
-                pixel_oeste = pixeles[a, b-1]
-            except IndexError:
-                pixel_oeste = (0, 0, 0)
-                veces =veces - 1
-
-            Rojos_suma = pixel_norte[0] + pixel_sur[0] + pixel_este[0] + pixel_oeste[0] + pixel_color[0]
-            Verdes_suma = pixel_norte[1]+ pixel_sur[1] + pixel_este[1] + pixel_oeste[1] + pixel_color[1]
-            Azul_suma = pixel_norte[2]+ pixel_sur[2] + pixel_este[2] + pixel_oeste[2] + pixel_color[2]
-
-            Rojo_prom = Rojos_suma/veces
-            Verde_prom = Verdes_suma/veces
-            Azul_prom = Azul_suma/veces
-
-            Rojo_dif = pixel_color[0] - Rojo_prom
-            Verde_dif = pixel_color[1] - Verde_prom
-            Azul_dif = pixel_color[2] - Azul_prom
-
-            tupla_promedio = (Rojo_dif, Verde_dif, Azul_dif)
-            colores.append(tupla_promedio)
-            imagen_nueva_prom.putpixel((a, b), tupla_promedio)
-    
-    return imagen_nueva_prom
-
 def normalizacion(imagen):
     pixeles = imagen.load()
     x, y = imagen.size
