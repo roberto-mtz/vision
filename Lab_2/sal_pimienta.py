@@ -3,15 +3,15 @@ from PIL import Image, ImageTk
 from math import floor
 import time
 import numpy
-
+import random
 def ventana():
     root = Tk()
-    root.title('Filtros')
+    root.title('Lab 2')
     frame = Frame()
     frame.pack(padx=5,pady=5)
     poner_imagen(obtener_original(path_imagen_original))
     b1 = Button(text='Original', command = boton_original).pack(in_=frame, side=LEFT)
-    b2 = Button(text='S&P', command = boton_bordes).pack(in_=frame, side=LEFT)
+    b2 = Button(text='S&P', command = boton_sp).pack(in_=frame, side=LEFT)
     b3 = Button(text='Quitar S&P', command = boton_bordes).pack(in_=frame, side=LEFT)
     b4 = Button(text='Bordes', command = boton_bordes).pack(in_=frame, side=LEFT)
     root.mainloop()
@@ -215,6 +215,26 @@ def cambiar_umbral(imagen, umbral_valor):
             imagen_nueva.putpixel((a, b), tupla_pixel)
     return imagen_nueva
 
+def cambiar_SP(imagen, inten, pola):
+    pixeles = imagen.load()
+    x, y = imagen.size
+    imagen_nueva = Image.new("RGB", (x, y))
+    
+    for a in range(x):
+        for b in range(y):
+            pixel_color = pixeles[a, b]
+            valor_canal = float(pixel_color[0])
+            color_nor = valor_canal/255.0
+            
+            if(inten > random.random()):
+                poner_pixel = random.choice([int(floor(255.0 * pola)), 0])
+            else:
+                poner_pixel = pixel_color[0]
+        
+            tupla_pixel = (poner_pixel, poner_pixel, poner_pixel)
+            imagen_nueva.putpixel((a, b), tupla_pixel)
+
+    return imagen_nueva
 
 def obtener_original(path_imagen_original):
     imagen = Image.open(path_imagen_original)
@@ -259,5 +279,12 @@ def boton_original():
     imagen_original = obtener_original(path_imagen_original)
     poner_imagen(imagen_original)
 
+def boton_sp():
+    label.destroy()
+    global imagen_original
+    imagen_grises = cambiar_SP(imagen_original.convert("RGB"), 0.1, 0.5)
+    poner_imagen(imagen_grises)
+
 path_imagen_original = "cerro.jpg"
+imagen_original = obtener_original(path_imagen_original)
 ventana()
