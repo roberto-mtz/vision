@@ -5,6 +5,8 @@ import time
 import numpy
 
 def ventana():
+    #GUI de la aplicacion
+    
     root = Tk()
     root.title('Bordes')
     frame = Frame()
@@ -16,6 +18,8 @@ def ventana():
     root.mainloop()
 
 def poner_imagen(image):
+    #Carga imagen en ventana
+    
     photo = ImageTk.PhotoImage(image)
     global label
     label = Label(image=photo)
@@ -23,6 +27,8 @@ def poner_imagen(image):
     label.pack()
 
 def cambiar_agrises(path_original):
+    #Pone a grises la imagen
+    
     imagen = Image.open(path_imagen_original).convert("RGB")
     pixeles = imagen.load()
     x, y = imagen.size
@@ -41,6 +47,8 @@ def cambiar_agrises(path_original):
     return imagen_nueva
 
 def convolucion(f, h):
+    #calculo de convolucion de las mascaras
+    
     pixeles = f.load()
     x, y = f.size
     F = Image.new("RGB", (x, y))
@@ -64,6 +72,8 @@ def convolucion(f, h):
     return F
 
 def cambiar_promedio(imagen):
+    #efecto borrado
+    
     pixeles = imagen.load()
     x, y = imagen.size
     imagen_nueva_prom = Image.new("RGB", (x, y))
@@ -112,6 +122,8 @@ def cambiar_promedio(imagen):
     return imagen_nueva_prom
 
 def normalizacion(imagen):
+    #normaliza utilizando todo el rango
+    
     pixeles = imagen.load()
     x, y = imagen.size
     min = 0
@@ -145,6 +157,8 @@ def normalizacion(imagen):
     return imagen_nueva
 
 def cambiar_umbral(imagen, umbral_valor):
+    #dado un umbral pone en completamente blanco o negro 
+    
     pixeles = imagen.load()
     x, y = imagen.size
     imagen_nueva = Image.new("RGB", (x, y))
@@ -164,6 +178,8 @@ def cambiar_umbral(imagen, umbral_valor):
 
 
 def obtener_original(path_imagen_original):
+    #cargar imagen original
+    
     imagen = Image.open(path_imagen_original)
     return imagen
 
@@ -219,16 +235,20 @@ def boton_bordes():
     return tiempo
 
 def boton_original():
+    #carga imagen original
+    
     label.destroy()
     imagen_original = obtener_original(path_imagen_original)
     poner_imagen(imagen_original)
 
 def boton_prueba():
+    #hace prueba de tiempo
+    
     tiempo = 0.0
     for i in range(30):
         tiempo = tiempo + boton_bordes()
     promedio = tiempo / 30.0
     print "Tiempo promedio de " + path_imagen_original + " es = " + str(promedio)
 
-path_imagen_original = "fruta.jpg"
+path_imagen_original = "woody.jpg"
 ventana()
