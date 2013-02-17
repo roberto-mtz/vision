@@ -1,20 +1,20 @@
 from Tkinter import *
 from PIL import Image, ImageTk
-from math import ceil
+from math import floor
 import numpy
 import random
 
 def ventana():
     root = Tk()
-    root.title('Lab 2')
+    root.title('Tarea 2')
+    global frame
     frame = Frame()
     frame.pack(padx=5,pady=5)
     poner_imagen(obtener_original(path_imagen_original))
     b1 = Button(text='Original', command = boton_original).pack(in_=frame, side=LEFT)
-    b2 = Button(text='S&P', command = boton_sp).pack(in_=frame, side=LEFT)
-    b3 = Button(text='Quitar S&P', command = boton_quitar_sp).pack(in_=frame, side=LEFT)
+    #b2 = Button(text='S&P', command = boton_sp).pack(in_=frame, side=LEFT)
+    #b3 = Button(text='Quitar S&P', command = boton_quitar_sp).pack(in_=frame, side=LEFT)
     b4 = Button(text='Bordes', command = boton_bordes).pack(in_=frame, side=LEFT)
-    b4 = Button(text='Guardar', command = boton_guardar).pack(in_=frame, side=LEFT)
     root.mainloop()
 
 def poner_imagen(image):
@@ -23,6 +23,34 @@ def poner_imagen(image):
     label = Label(image=photo)
     label.imagen = photo
     label.pack()
+
+def BFS(imagen, inicio, color):
+    pixeles = imagen.load()
+    altura, ancho = imagen.size
+
+    fila, columna = inicio
+    original = pixeles[fila, columna]
+
+    cola = []
+    cola.append((fila, columna))
+    masa = []
+
+    while len(cola) > 0:
+        (fila, columna) = cola.pop(0)
+        actual = pixeles[fila, columna]
+        if actual == original or actual == color:
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    candidato = (fila + dy, columna + dx)
+                    if candidato[0] >= 0 and candidato[0] < altura and candidato[1] >= 0 and candidato[1] < ancho:
+                        contenido = pixeles[candidato[0], candidato[1]]
+                        if contenido == original:
+                            pixeles[candidato[0], candidato[1]] = color
+                            imagen.putpixel((candidato[0], candidato[1]), color)
+                            cola.append(candidato)
+                            masa.append((candidato[0], candidato[1]))
+
+    return imagen, masa
 
 def cambiar_agrises(path_original):
     imagen = Image.open(path_imagen_original).convert("RGB")
@@ -168,8 +196,11 @@ def normalizacion(imagen):
     for a in range(x):
         for b in range(y):
             pixel_color = pixeles[a, b]
-            nuevo_pixel = ( float(pixel_color[0]) - float(min) )*( float(255) / (float(max) - float(min)) )
-            nuevo_pixel = int(ceil(nuevo_pixel))
+            try:
+                nuevo_pixel = ( float(pixel_color[0]) - float(min) )*( float(255) / (float(max) - float(min)) )
+                nuevo_pixel = int(floor(nuevo_pixel))
+            except:
+                nuevo_pixel = 255
             tupla_promedio = (nuevo_pixel, nuevo_pixel, nuevo_pixel)
             imagen_nueva.putpixel((a, b), tupla_promedio)
 
@@ -194,7 +225,6 @@ def cambiar_umbral(imagen, umbral_valor):
     return imagen_nueva
 
 def cambiar_SP(imagen, inten, pola):
-    #aleatoriamente agrega ruido
     pixeles = imagen.load()
     x, y = imagen.size
     imagen_nueva = Image.new("RGB", (x, y))
@@ -206,7 +236,7 @@ def cambiar_SP(imagen, inten, pola):
             color_nor = valor_canal/255.0
             
             if(inten > random.random()):
-                poner_pixel = random.choice([int(ceil(255.0 * pola)), 0])
+                poner_pixel = random.choice([int(floor(255.0 * pola)), 0])
             else:
                 poner_pixel = pixel_color[0]
         
@@ -216,7 +246,6 @@ def cambiar_SP(imagen, inten, pola):
     return imagen_nueva
 
 def quitar_SP(imagen):
-    #Saco la mediana de los pixeles vecinos para eliminar
     pixeles = imagen.load()
     x, y = imagen.size
     imagen_nueva_prom = Image.new("RGB", (x, y))
@@ -252,7 +281,7 @@ def quitar_SP(imagen):
             
             arreglo = [pixel_norte[0], pixel_sur[0], pixel_este[0], pixel_oeste[0]]
             arreglo.sort()
-            resultado = int(ceil(mediana(arreglo)))
+            resultado = int(floor(mediana(arreglo)))
             tupla_promedio = (resultado, resultado, resultado)
             imagen_nueva_prom.putpixel((a, b), tupla_promedio)
     
@@ -285,14 +314,112 @@ def boton_bordes():
     imagen_nor.save("paso_3.jpg")
     
     #Agrego umbral para binarizar
-    umbral_valor = 0.1
+    umbral_valor = 0.04
     imagen_bin = cambiar_umbral(imagen_nor.convert("RGB"), umbral_valor)
     imagen_bin.save("paso_4.jpg")
     
     #Pongo promedio
     imagen_prom = cambiar_promedio(imagen_bin.convert("RGB"))
     imagen_prom.save("paso_5.jpg")
-    poner_imagen(imagen_prom)
+    
+    #Agrego umbral para binarizar
+    umbral_valor = 0.08
+    imagen_bin2 = cambiar_umbral(imagen_prom.convert("RGB"), umbral_valor)
+    imagen_bin2.save("paso_6.jpg")
+    
+    #####
+    
+    #Pongo promedio
+    imagen_prom = cambiar_promedio(imagen_bin2.convert("RGB"))
+    imagen_prom.save("paso_7.jpg")
+    
+    #Pongo promedio
+    imagen_prom = cambiar_promedio(imagen_prom.convert("RGB"))
+    imagen_prom.save("paso_8.jpg")
+    
+    #Agrego umbral para binarizar
+    umbral_valor = 0.5
+    imagen_BFS = cambiar_umbral(imagen_prom.convert("RGB"), umbral_valor)
+    imagen_BFS.save("paso_9.jpg")
+    aplicar_BFS(imagen_BFS)
+
+
+
+def aplicar_BFS(imagen_BFS):
+    pixeles = imagen_BFS.load()
+    x, y = imagen_BFS.size
+    colores = []
+    for a in range(x):
+        for b in range(y):
+            if pixeles[a, b] == (0, 0, 0):
+                color = (random.randint(0,255), random.randint(0,255), random.randint(0, 255))
+                imagen_BFS, masa = BFS(imagen_BFS.convert("RGB"), (a, b), color)
+
+                x_suma = 0
+                y_suma = 0
+                for i in range(len(masa)):
+                    x_suma = x_suma + masa[i][0]
+                    y_suma = y_suma + masa[i][1]
+
+                x_centro = x_suma/len(masa)
+                y_centro = y_suma/len(masa)
+                colores.append([color, 0, (x_centro, y_centro)])
+                pixeles = imagen_BFS.load()
+                masa = []
+
+    pixeles = imagen_BFS.load()
+    for a in range(x):
+        for b in range(y):
+            for n in range(len(colores)):
+               if colores[n][0] == pixeles[a,b]:
+                    colores[n][1] = colores[n][1] + 1 
+
+    print colores
+
+    suma = 0
+    for i in range(len(colores)):
+        suma = suma + colores[i][1]
+
+    global frame
+    y = frame.winfo_height()
+
+    prom = []
+    for i in range(len(colores)):
+        promedio = float(colores[i][1])/float(suma)*100.0
+        if promedio > 3.0:
+            print "Porcentajes: "
+            print "Figura " + str(i) + ": " + str(promedio)
+            prom.append((i, promedio, colores[i][0]))
+
+    maxim = 0.0
+    for i in range(len(prom)):
+        if maxim < prom[i][1]:
+            maxim = prom[i][1]
+            fig = prom[i][0]
+            color_max = prom[i][2]
+
+    print "Fondo fig: " + str(fig)
+    imagen_BFS = pinta_fondo(imagen_BFS, color_max)
+    poner_imagen(imagen_BFS)
+
+    for i in range(len(colores)):
+        promedio = float(colores[i][1])/float(suma)*100.0
+        if promedio > 3.0:
+            print "Identifico . . ."
+            label_fig = Label(text = str(i)) 
+            label_fig.place(x = colores[i][2][0],  y = colores[i][2][1] + y)
+
+
+def pinta_fondo(imagen_BFS, color_max):   
+    pixeles = imagen_BFS.load()
+    x, y = imagen_BFS.size
+    for a in range(x):
+        for b in range(y):
+            if pixeles[a, b] == color_max:
+                color = (100,100,100)
+                imagen_BFS, masa = BFS(imagen_BFS.convert("RGB"), (a, b), color)
+                return imagen_BFS
+    
 
 def boton_original():
     label.destroy()
@@ -303,7 +430,7 @@ def boton_original():
 def boton_sp():
     label.destroy()
     global imagen_original
-    imagen_original = cambiar_SP(imagen_original.convert("RGB"), 0.01, 0.7) #inten, pola
+    imagen_original = cambiar_SP(imagen_original.convert("RGB"), 0.1, 0.9)
     poner_imagen(imagen_original)
 
 def boton_quitar_sp():
@@ -312,10 +439,6 @@ def boton_quitar_sp():
     imagen_original = quitar_SP(imagen_original.convert("RGB"))
     poner_imagen(imagen_original)
 
-def boton_guardar():
-    global imagen_original
-    imagen_original.save("Guardada.jpg")
-
-path_imagen_original = "woody.jpg"
+path_imagen_original = "figuras2.jpg"
 imagen_original = obtener_original(path_imagen_original)
 ventana()
