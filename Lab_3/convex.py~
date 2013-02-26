@@ -287,7 +287,7 @@ def aplicar_BFS(imagen_BFS):
     colores = []
     for a in range(x):
         for b in range(y):
-            if pixeles[a, b] == (0, 0, 0):
+            if pixeles[a, b] == (255, 255, 255):
                 color = (random.randint(0,255), random.randint(0,255), random.randint(0, 255))
                 imagen_BFS, masa = BFS(imagen_BFS.convert("RGB"), (a, b), color)
 

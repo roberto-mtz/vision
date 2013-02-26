@@ -1,12 +1,12 @@
 from Tkinter import *
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 from math import floor
 import numpy
 import random
 
 def ventana():
     root = Tk()
-    root.title('Tarea 2')
+    root.title('Lab 3')
     global frame
     frame = Frame()
     frame.pack(padx=5,pady=5)
@@ -25,14 +25,15 @@ def poner_imagen(image):
 def BFS(imagen, inicio, color):
     pixeles = imagen.load()
     altura, ancho = imagen.size
-
+    
     fila, columna = inicio
     original = pixeles[fila, columna]
-
+    
     cola = []
     cola.append((fila, columna))
     masa = []
-
+    pixeles_BFS = []
+    
     while len(cola) > 0:
         (fila, columna) = cola.pop(0)
         actual = pixeles[fila, columna]
@@ -47,8 +48,10 @@ def BFS(imagen, inicio, color):
                             imagen.putpixel((candidato[0], candidato[1]), color)
                             cola.append(candidato)
                             masa.append((candidato[0], candidato[1]))
-
-    return imagen, masa
+                            pixeles_BFS.append((candidato[0], candidato[1]))
+                            
+    
+    return imagen, masa, pixeles_BFS
 
 def cambiar_agrises(path_original):
     imagen = Image.open(path_imagen_original).convert("RGB")
@@ -72,7 +75,7 @@ def cambiar_promedio(imagen):
     pixeles = imagen.load()
     x, y = imagen.size
     imagen_nueva_prom = Image.new("RGB", (x, y))
-
+    
     colores = []
     for a in range(x):
         for b in range(y):
@@ -80,7 +83,7 @@ def cambiar_promedio(imagen):
             veces = 5
             suma = 0
             promedio = 0
-
+            
             try:
                 pixel_norte = pixeles[a-1,b]
             except IndexError:
@@ -101,19 +104,19 @@ def cambiar_promedio(imagen):
             except IndexError:
                 pixel_oeste = (0, 0, 0)
                 veces = veces - 1
-
+            
             Rojos_suma = pixel_norte[0] + pixel_sur[0] + pixel_este[0] + pixel_oeste[0] + pixel_color[0]
             Verdes_suma = pixel_norte[1]+ pixel_sur[1] + pixel_este[1] + pixel_oeste[1] + pixel_color[1]
             Azul_suma = pixel_norte[2]+ pixel_sur[2] + pixel_este[2] + pixel_oeste[2] + pixel_color[2]
-
+            
             Rojo_prom = Rojos_suma/veces
             Verdes_prom = Verdes_suma/veces
             Azul_prom = Azul_suma/veces
-
+            
             tupla_promedio = (Rojo_prom, Verdes_prom, Azul_prom)
             colores.append(tupla_promedio)
             imagen_nueva_prom.putpixel((a, b), tupla_promedio)
-
+    
     return imagen_nueva_prom
 
 def diferencia(imagen):
@@ -149,19 +152,19 @@ def diferencia(imagen):
             except IndexError:
                 pixel_oeste = (0, 0, 0)
                 veces =veces - 1
-
+            
             Rojos_suma = pixel_norte[0] + pixel_sur[0] + pixel_este[0] + pixel_oeste[0] + pixel_color[0]
             Verdes_suma = pixel_norte[1]+ pixel_sur[1] + pixel_este[1] + pixel_oeste[1] + pixel_color[1]
             Azul_suma = pixel_norte[2]+ pixel_sur[2] + pixel_este[2] + pixel_oeste[2] + pixel_color[2]
-
+            
             Rojo_prom = Rojos_suma/veces
             Verde_prom = Verdes_suma/veces
             Azul_prom = Azul_suma/veces
-
+            
             Rojo_dif = pixel_color[0] - Rojo_prom
             Verde_dif = pixel_color[1] - Verde_prom
             Azul_dif = pixel_color[2] - Azul_prom
-
+            
             tupla_promedio = (Rojo_dif, Verde_dif, Azul_dif)
             colores.append(tupla_promedio)
             imagen_nueva_prom.putpixel((a, b), tupla_promedio)
@@ -189,8 +192,6 @@ def normalizacion(imagen):
             elif (min == 0 and max == 255):
                 break
 
-    print min
-    print max
     for a in range(x):
         for b in range(y):
             pixel_color = pixeles[a, b]
@@ -279,24 +280,50 @@ def boton_bordes():
     imagen_BFS.save("paso_9.jpg")
     aplicar_BFS(imagen_bin2)
 
+def aplicar_gift(coordenadas):
+    y = []
+    x = []
+
+    for i in range(len(coordenadas)):
+        x.append(coordenadas[i][0])
+        y.append(coordenadas[i][1])
+    
+    p0 = min(coordenadas)
+    hull = [p0]
+    cont = 0
+    while 1:
+        fin = coordenadas[0]
+        for k in range(len(coordenadas) - 1):
+            direccion = cmp(0, (hull[cont][0] - coordenadas[k][0])*(fin[1] - coordenadas[k][1]) - (fin[0] - coordenadas[k][0])*(hull[cont][1] - coordenadas[k][1]))
+            if fin == hull[cont] or direccion == -1:
+                fin = coordenadas[k]
+        cont += 1
+        hull.append(fin)
+        if fin == hull[0]:
+            break
+
+    return hull
 
 
 def aplicar_BFS(imagen_BFS):
+    bordes = []
+    
     pixeles = imagen_BFS.load()
     x, y = imagen_BFS.size
     colores = []
     for a in range(x):
         for b in range(y):
-            if pixeles[a, b] == (0, 0, 0):
+            if pixeles[a, b] == (255, 255, 255):
                 color = (random.randint(0,255), random.randint(0,255), random.randint(0, 255))
-                imagen_BFS, masa = BFS(imagen_BFS.convert("RGB"), (a, b), color)
-
+                imagen_BFS, masa, pixeles_BFS = BFS(imagen_BFS.convert("RGB"), (a, b), color)
+                bordes.append(pixeles_BFS)
+                
                 x_suma = 0
                 y_suma = 0
                 for i in range(len(masa)):
                     x_suma = x_suma + masa[i][0]
                     y_suma = y_suma + masa[i][1]
-
+                
                 x_centro = x_suma/len(masa)
                 y_centro = y_suma/len(masa)
                 colores.append([color, 0, (x_centro, y_centro)])
@@ -307,18 +334,16 @@ def aplicar_BFS(imagen_BFS):
     for a in range(x):
         for b in range(y):
             for n in range(len(colores)):
-               if colores[n][0] == pixeles[a,b]:
-                    colores[n][1] = colores[n][1] + 1 
-
-    print colores
+                if colores[n][0] == pixeles[a,b]:
+                    colores[n][1] = colores[n][1] + 1
 
     suma = 0
     for i in range(len(colores)):
         suma = suma + colores[i][1]
-
+    
     global frame
     y = frame.winfo_height()
-
+    
     prom = []
     for i in range(len(colores)):
         promedio = float(colores[i][1])/float(suma)*100.0
@@ -336,33 +361,50 @@ def aplicar_BFS(imagen_BFS):
 
     print "Fondo fig: " + str(fig)
     imagen_BFS = pinta_fondo(imagen_BFS, color_max)
-    poner_imagen(imagen_BFS)
+    #poner_imagen(imagen_BFS)
 
     imagen_BFS.save("paso_10.jpg")
     for i in range(len(colores)):
         promedio = float(colores[i][1])/float(suma)*100.0
         if promedio > 1.5:
             print "Identifico . . ."
-            label_fig = Label(text = str(i)) 
+            label_fig = Label(text = str(i))
             label_fig.place(x = colores[i][2][0],  y = colores[i][2][1] + y)
 
+    todos_hull = []
+    for i in range(len(bordes)):
+        hull = aplicar_gift(bordes[i])
+        todos_hull.append(hull)
 
-def pinta_fondo(imagen_BFS, color_max):   
+    draw = ImageDraw.Draw(imagen_BFS)
+    for i in range(len(todos_hull)):
+        for j in range(len(todos_hull[i])):
+            try:
+                linea = (todos_hull[i][j][0],todos_hull[i][j][1], todos_hull[i][j+1][0],todos_hull[i][j+1][1])
+            except:
+                break
+            draw.line(linea, fill=128)
+
+    imagen_BFS.save("paso_11.jpg")
+    poner_imagen(imagen_BFS)
+    print todos_hull
+
+def pinta_fondo(imagen_BFS, color_max):
     pixeles = imagen_BFS.load()
     x, y = imagen_BFS.size
     for a in range(x):
         for b in range(y):
             if pixeles[a, b] == color_max:
                 color = (100,100,100)
-                imagen_BFS, masa = BFS(imagen_BFS.convert("RGB"), (a, b), color)
+                imagen_BFS, masa, bordes = BFS(imagen_BFS.convert("RGB"), (a, b), color)
                 return imagen_BFS
-    
+
 def boton_original():
     label.destroy()
     global imagen_original
     imagen_original = obtener_original(path_imagen_original)
     poner_imagen(imagen_original)
 
-path_imagen_original = "mapa.png"
+path_imagen_original = "estrella.gif"
 imagen_original = obtener_original(path_imagen_original)
 ventana()
