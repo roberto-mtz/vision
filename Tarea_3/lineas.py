@@ -206,7 +206,7 @@ def frecuentes(histo, cantidad):
 
 
 def linea(imagen_Y, imagen_X, w, h, imagen):
-    incluir = 0.8
+    incluir = 1.0
     CERO = 0.00001
     resultado = list()
     for y in range(h):
@@ -214,12 +214,13 @@ def linea(imagen_Y, imagen_X, w, h, imagen):
         for x in range(w):
             pixel_X = float(sum(imagen_X[x, y]))/3.0
             pixel_Y = float(sum(imagen_Y[x, y]))/3.0
+            print str(pixel_X) + " " + str(pixel_Y)
             if fabs(pixel_X) > CERO:
                 angulo = atan(pixel_Y/pixel_X)
             else:
                 if fabs(pixel_X) + fabs(pixel_Y) <= CERO:
                     angulo = None
-                elif pixel_Y == 255 and pixel_X == 0:
+                elif pixel_X == 0.0 and pixel_Y == 255.0:
                     angulo = 90.0
                 else:
                     angulo = 0.0
@@ -249,9 +250,12 @@ def linea(imagen_Y, imagen_X, w, h, imagen):
             (ang, rho) = resultado[y][x]
             if (ang, rho) in frec:
                 if str(ang) == "90.00":
-                    imagen.putpixel((x,y), (255,0,0))
-                if str(ang) == "0.00":
                     imagen.putpixel((x,y), (0,255,0))
+                elif str(ang) == "0.00":
+                    imagen.putpixel((x,y), (0,0,255))
+                else:
+                    imagen.putpixel((x,y), (255,0,0))
+
     imagen.save("Prueba.jpg")
     return imagen
                 
@@ -270,10 +274,10 @@ def boton_linea():
     h_obn45 = numpy.array([[2, -1, -1],[-1, 2, -1], [-1, -1, 2]])
     
     imagen_hori = convolucion(imagen, numpy.multiply(1.0/1.0,h_verti))
-    imagen_hori = cambiar_umbral(imagen_hori, 0.1)
+    #imagen_hori = cambiar_umbral(imagen_hori, 0.1)
     imagen_hori.save("paso_2.jpg")
     imagen_verti = convolucion(imagen, numpy.multiply(1.0/1.0,h_hori))
-    imagen_hori = cambiar_umbral(imagen_hori, 0.1)
+    #imagen_hori = cambiar_umbral(imagen_hori, 0.1)
     imagen_verti.save("paso_3.jpg")
     
     pixeles_hori = imagen_hori.load()
@@ -306,5 +310,5 @@ def boton_prueba():
     promedio = tiempo / 30.0
     print "Tiempo promedio de " + path_imagen_original + " es = " + str(promedio)
 
-path_imagen_original = "cuadricula.gif"
+path_imagen_original = "sine.gif"
 ventana()
