@@ -1,6 +1,6 @@
 from Tkinter import *
 from PIL import Image, ImageTk, ImageDraw
-from math import floor, atan, fabs, pi, cos, sin, ceil, sqrt
+from math import floor, atan, fabs, pi, cos, sin, ceil, sqrt, degrees, atan2
 from random import randint
 import random
 import time
@@ -456,6 +456,25 @@ def pinta_fondo(imagen_BFS, color_max):
                 imagen_BFS, masa, c = BFS(imagen_BFS.convert("RGB"), (a, b), color)
                 return imagen_BFS
 
+def gradiente_sobel(punto, pixeles):
+    x = punto[0]
+    y = punto[1]
+    z1 = pixeles[x-1, y-1][0]
+    z2 = pixeles[x, y-1][0]
+    z3 = pixeles[x+1, y-1][0]
+    z4 = pixeles[x-1, y][0]
+    z5 = pixeles[x, y][0]
+    z6 = pixeles[x+1, y][0]
+    z7 = pixeles[x-1, y+1][0]
+    z8 = pixeles[x, y+1][0]
+    z9 = pixeles[x+1, y+1][0]
+    Gx = ((z3)+(2*z6)+z9)-((z1)+(2*z4)+(z7))
+    Gy = ((z7)+(2*z8)+z9)-((z1)+(2*z2)+(z3))
+    print "GXcecy = %s GYcecy = %s" % (Gx, Gy)
+    angulo = atan2(Gy, Gx)
+    angulo = angulo -(pi/2)
+    return x,y, angulo
+
 def boton_elipse():
     inicio = time.time()
     label.destroy()
@@ -516,20 +535,26 @@ def boton_elipse():
     pixeles = imagen_BFS.load()
     bordes_detectados = []
 
-    h_hori = numpy.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
-    h_verti = numpy.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
-    imagen_hori, puntos_GX = convolucion(imagen, numpy.multiply(1.0/1.0,h_verti))
+    h_Y = numpy.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+    h_X = numpy.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+    imagen_hori, puntos_GX = convolucion(imagen, numpy.multiply(1.0/1.0,h_X))
     imagen_hori.save("paso_sobelX.jpg")
     pixeles_GX = imagen_hori.load()
-    imagen_verti, puntos_GY = convolucion(imagen, numpy.multiply(1.0/1.0,h_hori))
+    imagen_verti, puntos_GY = convolucion(imagen, numpy.multiply(1.0/1.0,h_Y))
     imagen_verti.save("paso_sobelY.jpg")
     pixeles_GY = imagen_verti.load()
+    
+    
     
     dibuja = ImageDraw.Draw(imagen_BFS)
     
     for elipse in elipses:
-        punto_1 = random.choice(elipse)
-        punto_2 = random.choice(elipse)
+        #punto_1 = random.choice(elipse)
+        #punto_2 = random.choice(elipse)
+        
+        tam = len(elipse)
+        punto_1 = elipse[tam/3]
+        punto_2 = elipse[0]
         
         x_1 = punto_1[0]
         y_1 = punto_1[1]
@@ -543,37 +568,78 @@ def boton_elipse():
         gx_2 = puntos_GX[x_2, y_2]
         gy_2 = puntos_GY[x_2, y_2]
         
-        print "X1 = %s    Y1 = %s" % (str(x_1), str(y_1))
-        print "X2 = %s    Y2 = %s" % (str(x_2), str(y_2))
-        print "GX1 = %s    GY1 = %s" % (str(gx_1), str(gy_1))
-        print "GX2 = %s    GY2 = %s" % (str(gx_2), str(gy_2))
+        gx_1 = - float(gx_1)
+        gx_2 = - float(gx_2)
+        
+        #print "X1 = %s    Y1 = %s" % (str(x_1), str(y_1))
+        #print "X2 = %s    Y2 = %s" % (str(x_2), str(y_2))
+        #print "GX1 = %s    GY1 = %s" % (str(gx_1), str(gy_1))
+        #print "GX2 = %s    GY2 = %s" % (str(gx_2), str(gy_2))
+        
+        x_22 = x_2
+        y_22 = y_2
+        x_11 = x_1
+        y_11 = y_1
+        
+        pix = imagen.load()
+        x,y, ang1 = gradiente_sobel((x_1, y_1), pix)
+        x,y, ang2 = gradiente_sobel((x_2, y_2), pix)
+        
         
         if abs(gx_1) + abs(gy_1) <= 0:
             theta = None
         else:
-            theta = atan(gy_1/gx_1)
+            theta = atan2(gy_1, gx_1)
 
-        l = 20
+        
+        l = 50
                 
         if theta is not None:
-            theta = theta-pi/2
-            x2_1 = x_1 + l * cos(theta)
-            y2_1 = y_1 + l * sin(theta)
+            theta = theta-(pi/2)
+            #print "theta1 = %s" % (str(degrees(float(theta))))
+            #print "theta1cecy = %s" % (str(degrees(float(ang1))))
+            x_1 = x_11 - l * cos(theta)
+            y_1 = y_11 - l * sin(theta)
+            x_2 = x_11 + l * cos(theta)
+            y_2 = y_11 + l * sin(theta)
             
         
         if abs(gx_2) + abs(gy_2) <= 0:
             theta = None
         else:
-            theta = atan(gy_2/gx_2)
+            theta = atan2(gy_2, gx_2)
         
+    
         if theta is not None:
-            theta = theta-pi/2
-            x2_2 = x_2 + l * cos(theta)
-            y2_2 = y_2 + l * sin(theta)
-
-        dibuja.line((x_1, y_1, x2_1, y2_1), fill="white")
-        dibuja.line((x_2, y_2, x2_2, y2_2), fill="red")
+            theta = theta-(pi/2)
+            #print "theta2 = %s" % (str(degrees(float(theta))))
+            #print "theta2cecy = %s" % (str(degrees(float(ang2))))
+            x_3 = x_22 - l * cos(theta)
+            y_3 = y_22 - l * sin(theta)
+            x_4 = x_22 + l * cos(theta)
+            y_4 = y_22 + l * sin(theta)
+                
+        y_medio = (y_11+y_22) / 2
+        x_medio = (x_11+x_22) / 2
         
+        #print "Y_MEDIO_1=%s X_MEDIO_1=%s X_MEDIO_2=%s Y_MEDIO_2=%s" % (str(y_medio_1), str(x_medio_1), str(x_medio_2), str(y_medio_2))
+        
+        dibuja.ellipse((x_medio-2, y_medio-2, x_medio+2, y_medio+2), fill="green")
+            
+        dibuja.ellipse((x_1-2, y_1-2, x_1+2, y_1+2), fill="yellow")
+        dibuja.ellipse((x_2-2, y_2-2, x_2+2, y_2+2), fill="yellow")
+        dibuja.ellipse((x_3-2, y_3-2, x_3+2, y_3+2), fill="orange")
+        dibuja.ellipse((x_4-2, y_4-2, x_4+2, y_4+2), fill="orange")        
+
+        Px = ((x_1*y_2-y_1*x_2)*(x_3-x_4)-(x_1-x_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
+        Py = ((x_1*y_2-y_1*x_2)*(y_3-y_4)-(y_1-y_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
+
+        dibuja.ellipse((Px-2, Py-2, Px+2, Py+2), fill="white")
+        dibuja.line((x_1, y_1, x_2, y_2), fill="blue")
+        dibuja.line((x_3, y_3, x_4, y_4), fill="red")
+        
+        
+    
 
     imagen_BFS.save("paso_lineas.jpg")
             
