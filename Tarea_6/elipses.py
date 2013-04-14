@@ -456,25 +456,6 @@ def pinta_fondo(imagen_BFS, color_max):
                 imagen_BFS, masa, c = BFS(imagen_BFS.convert("RGB"), (a, b), color)
                 return imagen_BFS
 
-def gradiente_sobel(punto, pixeles):
-    x = punto[0]
-    y = punto[1]
-    z1 = pixeles[x-1, y-1][0]
-    z2 = pixeles[x, y-1][0]
-    z3 = pixeles[x+1, y-1][0]
-    z4 = pixeles[x-1, y][0]
-    z5 = pixeles[x, y][0]
-    z6 = pixeles[x+1, y][0]
-    z7 = pixeles[x-1, y+1][0]
-    z8 = pixeles[x, y+1][0]
-    z9 = pixeles[x+1, y+1][0]
-    Gx = ((z3)+(2*z6)+z9)-((z1)+(2*z4)+(z7))
-    Gy = ((z7)+(2*z8)+z9)-((z1)+(2*z2)+(z3))
-    print "GXcecy = %s GYcecy = %s" % (Gx, Gy)
-    angulo = atan2(Gy, Gx)
-    angulo = angulo -(pi/2)
-    return x,y, angulo
-
 def boton_elipse():
     inicio = time.time()
     label.destroy()
@@ -544,9 +525,9 @@ def boton_elipse():
     imagen_verti.save("paso_sobelY.jpg")
     pixeles_GY = imagen_verti.load()
     
-    
-    
     dibuja = ImageDraw.Draw(imagen_BFS)
+    x, y = imagen_BFS.size
+    puntos = numpy.zeros(x*y).reshape((x, y))
     
     for elipse in elipses:
         #punto_1 = random.choice(elipse)
@@ -571,20 +552,10 @@ def boton_elipse():
         gx_1 = - float(gx_1)
         gx_2 = - float(gx_2)
         
-        #print "X1 = %s    Y1 = %s" % (str(x_1), str(y_1))
-        #print "X2 = %s    Y2 = %s" % (str(x_2), str(y_2))
-        #print "GX1 = %s    GY1 = %s" % (str(gx_1), str(gy_1))
-        #print "GX2 = %s    GY2 = %s" % (str(gx_2), str(gy_2))
-        
         x_22 = x_2
         y_22 = y_2
         x_11 = x_1
         y_11 = y_1
-        
-        pix = imagen.load()
-        x,y, ang1 = gradiente_sobel((x_1, y_1), pix)
-        x,y, ang2 = gradiente_sobel((x_2, y_2), pix)
-        
         
         if abs(gx_1) + abs(gy_1) <= 0:
             theta = None
@@ -596,8 +567,6 @@ def boton_elipse():
                 
         if theta is not None:
             theta = theta-(pi/2)
-            #print "theta1 = %s" % (str(degrees(float(theta))))
-            #print "theta1cecy = %s" % (str(degrees(float(ang1))))
             x_1 = x_11 - l * cos(theta)
             y_1 = y_11 - l * sin(theta)
             x_2 = x_11 + l * cos(theta)
@@ -612,8 +581,6 @@ def boton_elipse():
     
         if theta is not None:
             theta = theta-(pi/2)
-            #print "theta2 = %s" % (str(degrees(float(theta))))
-            #print "theta2cecy = %s" % (str(degrees(float(ang2))))
             x_3 = x_22 - l * cos(theta)
             y_3 = y_22 - l * sin(theta)
             x_4 = x_22 + l * cos(theta)
@@ -621,25 +588,36 @@ def boton_elipse():
                 
         y_medio = (y_11+y_22) / 2
         x_medio = (x_11+x_22) / 2
+                
+        #dibuja.ellipse((x_medio-2, y_medio-2, x_medio+2, y_medio+2), fill="green")
         
-        #print "Y_MEDIO_1=%s X_MEDIO_1=%s X_MEDIO_2=%s Y_MEDIO_2=%s" % (str(y_medio_1), str(x_medio_1), str(x_medio_2), str(y_medio_2))
-        
-        dibuja.ellipse((x_medio-2, y_medio-2, x_medio+2, y_medio+2), fill="green")
-            
-        dibuja.ellipse((x_1-2, y_1-2, x_1+2, y_1+2), fill="yellow")
-        dibuja.ellipse((x_2-2, y_2-2, x_2+2, y_2+2), fill="yellow")
-        dibuja.ellipse((x_3-2, y_3-2, x_3+2, y_3+2), fill="orange")
-        dibuja.ellipse((x_4-2, y_4-2, x_4+2, y_4+2), fill="orange")        
-
         Px = ((x_1*y_2-y_1*x_2)*(x_3-x_4)-(x_1-x_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
         Py = ((x_1*y_2-y_1*x_2)*(y_3-y_4)-(y_1-y_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
 
-        dibuja.ellipse((Px-2, Py-2, Px+2, Py+2), fill="white")
-        dibuja.line((x_1, y_1, x_2, y_2), fill="blue")
-        dibuja.line((x_3, y_3, x_4, y_4), fill="red")
-        
-        
-    
+        Dx = Px - x_medio
+        Dy = Py - y_medio
+        m = Dy/Dx
+        l = 10
+
+        Mx = x_medio
+        My = y_medio
+        x0 = Mx
+        y0 = My
+        for i in range(l):
+            x = x0+3
+            y = m*(x-x0)+y0
+            #print "x0 = %s y0 = %s x = %s y = %s" % (str(x0), str(y0), str(x), str(m))
+            #x_a = x_medio - (l*Dx)
+            #y_a = y_medio - (l*Dy)
+            dibuja.ellipse((x-2, y-2, x+2, y+2), fill="white")
+            x0 = x
+            y0 = y
+
+        #dibuja.ellipse((Px-2, Py-2, Px+2, Py+2), fill="white")
+        #dibuja.line((x_1, y_1, x_2, y_2), fill="orange")
+        #dibuja.line((x_3, y_3, x_4, y_4), fill="orange")
+        #dibuja.line((x_medio, y_medio, Px, Py), fill="yellow")
+        #dibuja.line((x_medio, y_medio, x_a, y_a), fill="white")
 
     imagen_BFS.save("paso_lineas.jpg")
             
@@ -649,7 +627,6 @@ def boton_elipse():
     print "Tiempo que trascurrio -> " + str(tiempo)
     
     return tiempo
-
 
 def boton_linea():
     inicio = time.time()
