@@ -432,16 +432,17 @@ def aplicar_BFS(imagen_BFS):
     #Itentificamos fondo y lo pintamos a gris
     print "Fondo fig: " + str(fig)
     imagen_BFS = pinta_fondo(imagen_BFS, color_max)
-    poner_imagen(imagen_BFS)
+    #poner_imagen(imagen_BFS)
 
     #Agregamos etiquetas segun su centro de masa
+    """
     for i in range(len(colores)):
         promedio = float(colores[i][1])/float(suma)*100.0
         if promedio > 1.5:
             print "Identifico . . ."
             label_fig = Label(text = str(i))
             label_fig.place(x = colores[i][2][0],  y = colores[i][2][1] + y)
-
+    """
     return imagen_BFS, colores, elipses
 
 
@@ -595,7 +596,6 @@ def boton_elipse():
                 Px = ((x_1*y_2-y_1*x_2)*(x_3-x_4)-(x_1-x_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
                 Py = ((x_1*y_2-y_1*x_2)*(y_3-y_4)-(y_1-y_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
 
-
                 Dx = Px - x_medio
                 Dy = Py - y_medio
                 m = Dy/Dx 
@@ -646,6 +646,8 @@ def boton_elipse():
                 r_x.append((x0, y0))
                 break
     Radios = []
+    x, y = imagen_BFS.size
+    print "Semidiametros perpendiculares del elipse" 
     for i in range(len(centros)):
         x0 = int(centros[i][0])
         y0 = int(centros[i][1])
@@ -655,17 +657,26 @@ def boton_elipse():
         y2 = int(r_y[i][1])
         Rx = sqrt((x1-x0)**2+(y1-y0)**2)
         Ry = sqrt((x2-x0)**2+(y2-y0)**2)
+        porcentaje = float(Rx * 100)/float(x)
+        print "ID: %s  SemiDiametro: %s  Porcentaje: %s" % (i, Rx, porcentaje)
         #Radios.append((Rx, Ry))
+        color = (randint(175,255), randint(134, 196), 0) #rango anaranjado
         a = 0
         while a < 2*pi:
             x4, y4 = x0 + Rx * sin(a), y0 + Ry * cos(a)
             a = a + 0.01
-            dibuja.ellipse((x4-2, y4-2, x4+2, y4+2), fill="yellow")
+            dibuja.ellipse((x4-2, y4-2, x4+2, y4+2), fill=color)
 
-    print Radios
+    poner_imagen(imagen_BFS)
+
+    global frame
+    y = frame.winfo_height()
+    for i in range(len(centros)):
+        label_fig = Label(text = str(i))
+        label_fig.place(x = centros[i][0],  y = centros[i][1] + y)
+        dibuja.ellipse((centros[i][0]-2, centros[i][1]-2, centros[i][0]+2, centros[i][1]+2), fill="blue")
 
     imagen_BFS.save("paso_lineas.jpg")
-            
     #Tiempo
     fin = time.time()
     tiempo = fin - inicio
