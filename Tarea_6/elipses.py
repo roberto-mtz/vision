@@ -528,20 +528,14 @@ def boton_elipse():
     dibuja = ImageDraw.Draw(imagen_BFS)
     x, y = imagen_BFS.size
     puntos = numpy.zeros(x*y).reshape((x, y))
-    
+    centros = []
     for elipse in elipses:
         x, y = imagen_BFS.size
         puntos = numpy.zeros(x*y).reshape((x, y))
-        for i in range(2000):
-            #punto_1 = random.choice(elipse)
-            #punto_2 = random.choice(elipse)
-            #algo = randint(2,5)
-            
+        for i in range(2000):            
             tam = len(elipse)
-            rango = len(elipse)/2
             punto_1 = elipse[randint(0,tam-1)]
             punto_2 = elipse[randint(0,tam-1)]
-            #print "X = %s, Y = %s" % (str(punto_1), str(punto_2))
             
             x_1 = punto_1[0]
             y_1 = punto_1[1]
@@ -595,7 +589,6 @@ def boton_elipse():
             y_medio = (y_11+y_22) / 2
             x_medio = (x_11+x_22) / 2
                 
-            #dibuja.ellipse((x_medio-2, y_medio-2, x_medio+2, y_medio+2), fill="green")
             pixeles = imagen_BFS.load()
             
             try:
@@ -605,30 +598,18 @@ def boton_elipse():
 
                 Dx = Px - x_medio
                 Dy = Py - y_medio
-                m = Dy/Dx
-                l = 10
-
-                Mx = x_medio
-                My = y_medio
-                x0 = Mx
-                y0 = My
+                m = Dy/Dx 
+                x0 = x_medio
+                y0 = y_medio
                 while True:
                     x = x0+1
                     y = m*(x-x0)+y0
-                    #print pixeles[x, y]
-                    #time.sleep(1)
                     if pixeles[x,y] == (0, 0, 0):
-                        #print "entro"
-                        #dibuja.ellipse((x-1, y-1, x+1, y+1), fill="yellow")
                         puntos[x, y] = puntos[x, y] + 1
                         x0 = x
                         y0 = y
                     else:
                         break
-                #dibuja.line((x_1, y_1, x_2, y_2), fill="orange")
-                #dibuja.line((x_3, y_3, x_4, y_4), fill="orange")
-                #dibuja.line((x_medio, y_medio, Px, Py), fill="yellow")
-                #dibuja.line((x_medio, y_medio, x_a, y_a), fill="white")
             except:
                 pass
         max = numpy.max(puntos)
@@ -636,22 +617,52 @@ def boton_elipse():
         try:
             mayor_x = sum(index[0])/len(index[0])
             mayor_y = sum(index[1])/len(index[0])
-            dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="blue")
-            """
-            for i in range(len(index)):
-                for j in range(len(index[0])):
-                    try:
-                        mayor_x = index[i][j]
-                        mayor_y = index[i+1][j]
-                        dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="red")
-                    except:
-                        pass
-            """
-            
+            #dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="blue")
+            centros.append((mayor_x, mayor_y))
         except:
             mayor_x = index[0]
             mayor_y = index[1]
-            dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="blue")
+            #dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="blue")
+            centros.append((mayor_x, mayor_y))
+
+    r_x = []
+    r_y = []
+    pixeles_imagen = imagen_BFS.load()
+    for i in range(len(centros)):
+        x0 = int(centros[i][0])
+        y0 = int(centros[i][1])
+        while True:
+            y0 = y0 + 1
+            if pixeles_imagen[x0, y0] != (0, 0, 0):
+                r_y.append((x0, y0))
+                break
+
+    for i in range(len(centros)):
+        x0 = int(centros[i][0])
+        y0 = int(centros[i][1])
+        while True:
+            x0 = x0 + 1
+            if pixeles_imagen[x0, y0] != (0, 0, 0):
+                r_x.append((x0, y0))
+                break
+    Radios = []
+    for i in range(len(centros)):
+        x0 = int(centros[i][0])
+        y0 = int(centros[i][1])
+        x1 = int(r_x[i][0])
+        y1 = int(r_x[i][1])
+        x2 = int(r_y[i][0])
+        y2 = int(r_y[i][1])
+        Rx = sqrt((x1-x0)**2+(y1-y0)**2)
+        Ry = sqrt((x2-x0)**2+(y2-y0)**2)
+        #Radios.append((Rx, Ry))
+        a = 0
+        while a < 2*pi:
+            x4, y4 = x0 + Rx * sin(a), y0 + Ry * cos(a)
+            a = a + 0.01
+            dibuja.ellipse((x4-2, y4-2, x4+2, y4+2), fill="yellow")
+
+    print Radios
 
     imagen_BFS.save("paso_lineas.jpg")
             
