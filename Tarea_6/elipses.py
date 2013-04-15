@@ -530,94 +530,127 @@ def boton_elipse():
     puntos = numpy.zeros(x*y).reshape((x, y))
     
     for elipse in elipses:
-        #punto_1 = random.choice(elipse)
-        #punto_2 = random.choice(elipse)
+        x, y = imagen_BFS.size
+        puntos = numpy.zeros(x*y).reshape((x, y))
+        for i in range(100):
+            #punto_1 = random.choice(elipse)
+            #punto_2 = random.choice(elipse)
+            #algo = randint(2,5)
+            
+            tam = len(elipse)
+            rango = len(elipse)/2
+            punto_1 = elipse[randint(0,tam-1)]
+            punto_2 = elipse[randint(0,tam-1)]
+            #print "X = %s, Y = %s" % (str(punto_1), str(punto_2))
+            
+            x_1 = punto_1[0]
+            y_1 = punto_1[1]
         
-        tam = len(elipse)
-        punto_1 = elipse[tam/3]
-        punto_2 = elipse[0]
+            x_2 = punto_2[0]
+            y_2 = punto_2[1]
         
-        x_1 = punto_1[0]
-        y_1 = punto_1[1]
+            gx_1 = puntos_GX[x_1, y_1]
+            gy_1 = puntos_GY[x_1, y_1]
         
-        x_2 = punto_2[0]
-        y_2 = punto_2[1]
+            gx_2 = puntos_GX[x_2, y_2]
+            gy_2 = puntos_GY[x_2, y_2]
         
-        gx_1 = puntos_GX[x_1, y_1]
-        gy_1 = puntos_GY[x_1, y_1]
+            gx_1 = - float(gx_1)
+            gx_2 = - float(gx_2)
+        
+            x_22 = x_2
+            y_22 = y_2
+            x_11 = x_1
+            y_11 = y_1
+        
+            if abs(gx_1) + abs(gy_1) <= 0:
+                theta = None
+            else:
+                theta = atan2(gy_1, gx_1)
 
-        gx_2 = puntos_GX[x_2, y_2]
-        gy_2 = puntos_GY[x_2, y_2]
         
-        gx_1 = - float(gx_1)
-        gx_2 = - float(gx_2)
-        
-        x_22 = x_2
-        y_22 = y_2
-        x_11 = x_1
-        y_11 = y_1
-        
-        if abs(gx_1) + abs(gy_1) <= 0:
-            theta = None
-        else:
-            theta = atan2(gy_1, gx_1)
-
-        
-        l = 50
+            l = 50
                 
-        if theta is not None:
-            theta = theta-(pi/2)
-            x_1 = x_11 - l * cos(theta)
-            y_1 = y_11 - l * sin(theta)
-            x_2 = x_11 + l * cos(theta)
-            y_2 = y_11 + l * sin(theta)
+            if theta is not None:
+                theta = theta-(pi/2)
+                x_1 = x_11 - l * cos(theta)
+                y_1 = y_11 - l * sin(theta)
+                x_2 = x_11 + l * cos(theta)
+                y_2 = y_11 + l * sin(theta)
             
         
-        if abs(gx_2) + abs(gy_2) <= 0:
-            theta = None
-        else:
-            theta = atan2(gy_2, gx_2)
+            if abs(gx_2) + abs(gy_2) <= 0:
+                theta = None
+            else:
+                theta = atan2(gy_2, gx_2)
         
     
-        if theta is not None:
-            theta = theta-(pi/2)
-            x_3 = x_22 - l * cos(theta)
-            y_3 = y_22 - l * sin(theta)
-            x_4 = x_22 + l * cos(theta)
-            y_4 = y_22 + l * sin(theta)
+            if theta is not None:
+                theta = theta-(pi/2)
+                x_3 = x_22 - l * cos(theta)
+                y_3 = y_22 - l * sin(theta)
+                x_4 = x_22 + l * cos(theta)
+                y_4 = y_22 + l * sin(theta)
                 
-        y_medio = (y_11+y_22) / 2
-        x_medio = (x_11+x_22) / 2
+            y_medio = (y_11+y_22) / 2
+            x_medio = (x_11+x_22) / 2
                 
-        #dibuja.ellipse((x_medio-2, y_medio-2, x_medio+2, y_medio+2), fill="green")
-        
-        Px = ((x_1*y_2-y_1*x_2)*(x_3-x_4)-(x_1-x_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
-        Py = ((x_1*y_2-y_1*x_2)*(y_3-y_4)-(y_1-y_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
+            #dibuja.ellipse((x_medio-2, y_medio-2, x_medio+2, y_medio+2), fill="green")
+            pixeles = imagen_BFS.load()
+            
+            try:
+                Px = ((x_1*y_2-y_1*x_2)*(x_3-x_4)-(x_1-x_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
+                Py = ((x_1*y_2-y_1*x_2)*(y_3-y_4)-(y_1-y_2)*(x_3*y_4-y_3*x_4))/((x_1-x_2)*(y_3-y_4)-(y_1-y_2)*(x_3-x_4))
 
-        Dx = Px - x_medio
-        Dy = Py - y_medio
-        m = Dy/Dx
-        l = 10
 
-        Mx = x_medio
-        My = y_medio
-        x0 = Mx
-        y0 = My
-        for i in range(l):
-            x = x0+3
-            y = m*(x-x0)+y0
-            #print "x0 = %s y0 = %s x = %s y = %s" % (str(x0), str(y0), str(x), str(m))
-            #x_a = x_medio - (l*Dx)
-            #y_a = y_medio - (l*Dy)
-            dibuja.ellipse((x-2, y-2, x+2, y+2), fill="white")
-            x0 = x
-            y0 = y
+                Dx = Px - x_medio
+                Dy = Py - y_medio
+                m = Dy/Dx
+                l = 10
 
-        #dibuja.ellipse((Px-2, Py-2, Px+2, Py+2), fill="white")
-        #dibuja.line((x_1, y_1, x_2, y_2), fill="orange")
-        #dibuja.line((x_3, y_3, x_4, y_4), fill="orange")
-        #dibuja.line((x_medio, y_medio, Px, Py), fill="yellow")
-        #dibuja.line((x_medio, y_medio, x_a, y_a), fill="white")
+                Mx = x_medio
+                My = y_medio
+                x0 = Mx
+                y0 = My
+                count = 0
+                while True:
+                    x = x0+1
+                    y = m*(x-x0)+y0
+                    #print pixeles[x, y]
+                    #time.sleep(1)
+                    if pixeles[x,y] == (0, 0, 0):
+                        #print "entro"
+                        #dibuja.ellipse((x-1, y-1, x+1, y+1), fill="yellow")
+                        puntos[x, y] = puntos[x, y] + 1
+                        x0 = x
+                        y0 = y
+                    else:
+                        break
+                #dibuja.line((x_1, y_1, x_2, y_2), fill="orange")
+                #dibuja.line((x_3, y_3, x_4, y_4), fill="orange")
+                #dibuja.line((x_medio, y_medio, Px, Py), fill="yellow")
+                #dibuja.line((x_medio, y_medio, x_a, y_a), fill="white")
+            except:
+                pass
+        max = numpy.max(puntos)
+        print max
+        index=numpy.where(puntos==max)
+        print index
+        try:
+            #mayor_x = index[0][0]
+            #mayor_y = index[0][1]
+            for i in range(len(index)):
+                for j in range(len(index[0])):
+                    try:
+                        mayor_x = index[i][j]
+                        mayor_y = index[i+1][j]
+                        dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="red")
+                    except:
+                        pass
+        except:
+            mayor_x = index[0]
+            mayor_y = index[1]
+            dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="red")
 
     imagen_BFS.save("paso_lineas.jpg")
             
@@ -683,5 +716,5 @@ def boton_prueba():
     
 #imagen = crea_elipse(20, 60, cuantos=3, dim=250)
 #imagen.save("circulo.gif")
-path_imagen_original = "circulo3.gif"
+path_imagen_original = "circulo5.gif"
 ventana()
