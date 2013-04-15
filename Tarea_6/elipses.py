@@ -532,7 +532,7 @@ def boton_elipse():
     for elipse in elipses:
         x, y = imagen_BFS.size
         puntos = numpy.zeros(x*y).reshape((x, y))
-        for i in range(100):
+        for i in range(2000):
             #punto_1 = random.choice(elipse)
             #punto_2 = random.choice(elipse)
             #algo = randint(2,5)
@@ -612,7 +612,6 @@ def boton_elipse():
                 My = y_medio
                 x0 = Mx
                 y0 = My
-                count = 0
                 while True:
                     x = x0+1
                     y = m*(x-x0)+y0
@@ -633,12 +632,12 @@ def boton_elipse():
             except:
                 pass
         max = numpy.max(puntos)
-        print max
-        index=numpy.where(puntos==max)
-        print index
+        index = numpy.where(puntos==max)
         try:
-            #mayor_x = index[0][0]
-            #mayor_y = index[0][1]
+            mayor_x = sum(index[0])/len(index[0])
+            mayor_y = sum(index[1])/len(index[0])
+            dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="blue")
+            """
             for i in range(len(index)):
                 for j in range(len(index[0])):
                     try:
@@ -647,10 +646,12 @@ def boton_elipse():
                         dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="red")
                     except:
                         pass
+            """
+            
         except:
             mayor_x = index[0]
             mayor_y = index[1]
-            dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="red")
+            dibuja.ellipse((mayor_x-2, mayor_y-2, mayor_x+2, mayor_y+2), fill="blue")
 
     imagen_BFS.save("paso_lineas.jpg")
             
