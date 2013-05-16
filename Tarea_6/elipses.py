@@ -737,7 +737,7 @@ def boton_prueba():
     cuantos = 1
     radio = 50
     
-#imagen = crea_elipse(20, 60, cuantos=3, dim=250)
-#imagen.save("circulo.gif")
-path_imagen_original = "circulo5.gif"
+imagen = crea_elipse(20, 60, cuantos=2, dim=250)
+imagen.save("circulo.gif")
+path_imagen_original = "circulo.gif"
 ventana()

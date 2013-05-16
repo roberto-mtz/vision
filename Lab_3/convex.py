@@ -405,6 +405,6 @@ def boton_original():
     imagen_original = obtener_original(path_imagen_original)
     poner_imagen(imagen_original)
 
-path_imagen_original = "estrella.gif"
+path_imagen_original = "star3.png"
 imagen_original = obtener_original(path_imagen_original)
 ventana()
